@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { db } from '../../db/client';
 import { applications, categories } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 import { seedDataIfEmpty } from '../../db/seed';
+
+import AddApplicationButton from '../../components/applications/AddApplicationButton';
 
 type ApplicationWithCategory = {
   id: number;
@@ -51,13 +54,8 @@ export default function ApplicationsScreen() {
       await seedDataIfEmpty();
       await loadApplications();
     }
-
     setup();
-  }, []);
-
-  function handleAddApplication() {
-    alert('Add Application button pressed');
-  }
+  });
 
   if (loading) {
     return (
@@ -74,21 +72,31 @@ export default function ApplicationsScreen() {
         <Text style={styles.emptyText}>
           Add your first application to get started.
         </Text>
-        <Pressable style={styles.addButton} onPress={handleAddApplication}>
+        <Pressable style={styles.addButton} onPress={() => router.push('/add_application')}>
           <Text style={styles.addButtonText}>Add Application</Text>
         </Pressable>
       </View>
     );
   }
 
-    return (
+  return (
     <View style={styles.screen}>
       <FlatList
         data={items}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <Pressable
+            style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
+            onPress={() =>
+              router.push({
+                pathname: '/application/[id]',
+                params: { id: item.id.toString() },
+              })
+            }
+            accessibilityLabel={`${item.company}, ${item.role}, ${item.currentStatus}`}
+            accessibilityRole="button"
+          >
             <View
               style={[
                 styles.categoryDot,
@@ -104,13 +112,11 @@ export default function ApplicationsScreen() {
               <Text style={styles.meta}>{item.dateApplied}</Text>
               {item.location ? <Text style={styles.meta}>{item.location}</Text> : null}
             </View>
-          </View>
+          </Pressable>
         )}
       />
 
-      <Pressable style={styles.addButton} onPress={handleAddApplication}>
-        <Text style={styles.addButtonText}>Add Application</Text>
-      </Pressable>
+      <AddApplicationButton />
     </View>
   );
 }
@@ -140,16 +146,16 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
   },
-addButton: {
-  position: 'absolute',
-  bottom: 24,
-  left: 16,
-  right: 16,
-  backgroundColor: '#2563EB',
-  paddingVertical: 14,
-  borderRadius: 10,
-  alignItems: 'center',
-},
+  addButton: {
+    position: 'absolute',
+    bottom: 24,
+    left: 16,
+    right: 16,
+    backgroundColor: '#2563EB',
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
   addButtonText: {
     color: '#fff',
     fontSize: 16,

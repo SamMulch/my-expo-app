@@ -1,17 +1,9 @@
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { db } from '../../db/client';
-import { applications, applicationStatusLogs, categories } from '../../db/schema';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View, } from 'react-native';
 import { eq } from 'drizzle-orm';
+import { db } from '../../../db/client';
+import { applications, categories } from '../../../db/schema';
 
 type Category = {
   id: number;
@@ -22,31 +14,46 @@ type Category = {
 
 const STATUS_OPTIONS = ['Applied', 'Interviewing', 'Offer', 'Rejected', 'Withdrawn'];
 
-export default function AddApplicationScreen() {
+export default function EditApplication() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
 
   const [company, setCompany] = useState('');
   const [role, setRole] = useState('');
-  const [dateApplied, setDateApplied] = useState(
-    new Date().toISOString().split('T')[0] // defaults to today
-  );
+  const [dateApplied, setDateApplied] = useState('');
   const [location, setLocation] = useState('');
   const [extraContext, setExtraContext] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('Applied');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [categoryList, setCategoryList] = useState<Category[]>([]);
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    async function loadCategories() {
-      const rows = await db.select().from(categories);
-      setCategoryList(rows);
-      if (rows.length > 0) setSelectedCategoryId(rows[0].id);
-    }
-    loadCategories();
-  }, []);
+    async function loadData() {
+      // Load the existing application
+      const appResults = await db
+        .select()
+        .from(applications)
+        .where(eq(applications.id, Number(id)));
 
-  async function handleSave() {
+      if (appResults.length > 0) {
+        const app = appResults[0];
+        setCompany(app.company);
+        setRole(app.role);
+        setDateApplied(app.dateApplied);
+        setLocation(app.location ?? '');
+        setExtraContext(app.extraContext ?? '');
+        setSelectedStatus(app.currentStatus);
+        setSelectedCategoryId(app.categoryId);
+      }
+
+      // Load categories for the picker
+      const cats = await db.select().from(categories);
+      setCategoryList(cats);
+    }
+    loadData();
+  }, [id]);
+
+  const saveChanges = async () => {
     if (!company.trim()) {
       Alert.alert('Missing info', 'Company name is required.');
       return;
@@ -55,99 +62,60 @@ export default function AddApplicationScreen() {
       Alert.alert('Missing info', 'Role is required.');
       return;
     }
-    if (!selectedCategoryId) {
-      Alert.alert('Missing info', 'Please select a category.');
-      return;
-    }
-    if (!dateApplied.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      Alert.alert('Invalid date', 'Date must be in YYYY-MM-DD format.');
-      return;
-    }
 
-    setSaving(true);
-    try {
-      // Insert the application into db
-      const result = await db
-        .insert(applications)
-        .values({
-          company: company.trim(),
-          role: role.trim(),
-          dateApplied,
-          applicationCount: 1,
-          categoryId: selectedCategoryId,
-          currentStatus: selectedStatus,
-          location: location.trim() || null,
-          extraContext: extraContext.trim() || null,
-        })
-        .returning({ id: applications.id });
+    await db
+      .update(applications)
+      .set({
+        company: company.trim(),
+        role: role.trim(),
+        dateApplied,
+        currentStatus: selectedStatus,
+        categoryId: selectedCategoryId!,
+        location: location.trim() || null,
+        extraContext: extraContext.trim() || null,
+      })
+      .where(eq(applications.id, Number(id)));
 
-      const newId = result[0]?.id;
-
-      // Insert initial status log entry
-      if (newId) {
-        await db.insert(applicationStatusLogs).values({
-          applicationId: newId,
-          status: selectedStatus,
-          changedAt: new Date().toISOString(),
-          notes: `Initial status: ${selectedStatus}`,
-        });
-      }
-
-      router.back();
-    } catch (err) {
-      console.error('Failed to save application:', err);
-      Alert.alert('Error', 'Could not save application. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  }
+    router.replace('/(tabs)/applications');
+  };
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>New Application</Text>
+      <Text style={styles.heading}>Edit Application</Text>
 
-      {/* Company */}
       <Text style={styles.label}>Company *</Text>
       <TextInput
         style={styles.input}
-        placeholder="e.g. Google"
         value={company}
         onChangeText={setCompany}
         accessibilityLabel="Company"
       />
 
-      {/* Role */}
       <Text style={styles.label}>Role *</Text>
       <TextInput
         style={styles.input}
-        placeholder="e.g. Software Engineer"
         value={role}
         onChangeText={setRole}
         accessibilityLabel="Role"
       />
 
-      {/* Date Applied */}
       <Text style={styles.label}>Date Applied *</Text>
       <TextInput
         style={styles.input}
-        placeholder="YYYY-MM-DD"
         value={dateApplied}
         onChangeText={setDateApplied}
         accessibilityLabel="Date Applied"
         keyboardType="numbers-and-punctuation"
       />
 
-      {/* Location */}
       <Text style={styles.label}>Location</Text>
       <TextInput
         style={styles.input}
-        placeholder="e.g. Dublin, Remote"
         value={location}
         onChangeText={setLocation}
         accessibilityLabel="Location"
       />
 
-      {/* Status Picker */}
       <Text style={styles.label}>Status *</Text>
       <View style={styles.chipRow}>
         {STATUS_OPTIONS.map((s) => (
@@ -165,7 +133,6 @@ export default function AddApplicationScreen() {
         ))}
       </View>
 
-      {/* Category Picker */}
       <Text style={styles.label}>Category *</Text>
       <View style={styles.chipRow}>
         {categoryList.map((cat) => (
@@ -191,11 +158,9 @@ export default function AddApplicationScreen() {
         ))}
       </View>
 
-      {/* Notes */}
       <Text style={styles.label}>Notes</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
-        placeholder="Any extra context..."
         value={extraContext}
         onChangeText={setExtraContext}
         multiline
@@ -203,15 +168,13 @@ export default function AddApplicationScreen() {
         accessibilityLabel="Notes"
       />
 
-      {/* Buttons */}
       <Pressable
-        style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-        onPress={handleSave}
-        disabled={saving}
-        accessibilityLabel="Save Application"
+        style={styles.saveButton}
+        onPress={saveChanges}
+        accessibilityLabel="Save changes"
         accessibilityRole="button"
       >
-        <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Save Application'}</Text>
+        <Text style={styles.saveButtonText}>Save Changes</Text>
       </Pressable>
 
       <Pressable
@@ -293,9 +256,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
-  },
-  saveButtonDisabled: {
-    backgroundColor: '#93C5FD',
   },
   saveButtonText: {
     color: '#fff',

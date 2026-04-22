@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 
 export default function AddApplicationButton() {
+  const router = useRouter();
   return (
     <Pressable
       style={styles.fab}
