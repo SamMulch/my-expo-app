@@ -38,3 +38,11 @@ export const targets = sqliteTable('targets', {
   startDate: text('start_date').notNull(),
   endDate: text('end_date').notNull(),
 });
+
+// adding in now for user auth
+export const users = sqliteTable('users', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  username: text('username').notNull().unique(),
+  password: text('password').notNull(),
+  createdAt: text('created_at').notNull(),
+});

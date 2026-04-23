@@ -27,23 +27,28 @@ export default function TabLayout() {
         name="applications"
         options={{
           title: 'My Jobs',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="doc.fill" color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
+    
       <Tabs.Screen
         name="categories"
         options={{
           title: 'Categories',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="tray.full.fill" color={color} />,
         }}
       />
-    </Tabs>
+
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="slider.horizontal.3" color={color} />,
+        }}
+      />
+    </Tabs>    
   );
 }
+
+// handy for getting the SF icons:
+// https://hotpot.ai/free-icons
