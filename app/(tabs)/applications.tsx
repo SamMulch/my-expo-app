@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { useState, useCallback } from 'react';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
 import { db } from '../../db/client';
 import { applications, categories } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 import { seedDataIfEmpty } from '../../db/seed';
-
 import AddApplicationButton from '../../components/applications/AddApplicationButton';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ApplicationWithCategory = {
   id: number;
@@ -23,6 +23,10 @@ type ApplicationWithCategory = {
 export default function ApplicationsScreen() {
   const [items, setItems] = useState<ApplicationWithCategory[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // for searching 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   async function loadApplications() {
     try {
@@ -49,12 +53,36 @@ export default function ApplicationsScreen() {
     }
   }
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     async function setup() {
+      setLoading(true);
       await seedDataIfEmpty();
       await loadApplications();
     }
+
     setup();
+  }, [])
+);
+
+  // category data comes from what is already loaded
+  const categoryOptions = [
+    'All',
+    ...Array.from(new Set(items.map(item => item.categoryName))).sort(),
+  ];
+
+  // filtering that list to do the sorting operations
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredItems = items.filter(app => {
+    const matchesSearch =
+      normalizedQuery.length === 0 ||
+      app.company.toLowerCase().includes(normalizedQuery) ||
+      app.role.toLowerCase().includes(normalizedQuery);
+
+    const matchesCategory =
+      selectedCategory === 'All' || app.categoryName === selectedCategory;
+
+    return matchesSearch && matchesCategory;
   });
 
   if (loading) {
@@ -69,7 +97,7 @@ export default function ApplicationsScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.emptyTitle}>No applications yet</Text>
-        <Text style={styles.emptyText}>
+        <Text style={styles.emptySubText}>
           Add your first application to get started.
         </Text>
         <Pressable style={styles.addButton} onPress={() => router.push('/add_application')}>
@@ -80,11 +108,53 @@ export default function ApplicationsScreen() {
   }
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }} edges={['top']}>
     <View style={styles.screen}>
+      {/* searchbar */}
+      <TextInput
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        placeholder="Search by company or role..."
+        placeholderTextColor="#64748B" // wasnt visible before
+        accessibilityLabel="Search applications"
+        style={styles.searchInput}
+      />
+
+      {/* Category filtering pills */}
+<ScrollView
+  horizontal
+  showsHorizontalScrollIndicator={false}
+  contentContainerStyle={styles.filterRow}
+>
+  {categoryOptions.map((cat) => {
+    const isSelected = selectedCategory === cat;
+    return (
+      <Pressable
+        key={cat}
+        accessibilityLabel={`Filter by ${cat}`}
+        accessibilityRole="button"
+        onPress={() => setSelectedCategory(cat)}
+        style={[styles.filterButton, isSelected && styles.filterButtonSelected]}
+      >
+        <Text
+          style={[styles.filterButtonText, isSelected && styles.filterButtonTextSelected]}
+          numberOfLines={1}
+        >
+          {cat}
+        </Text>
+      </Pressable>
+    );
+  })}
+</ScrollView>
+
+      {/* Applications list */}
       <FlatList
-        data={items}
+        data={filteredItems}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>No applications match your filters</Text>
+        }
         renderItem={({ item }) => (
           <Pressable
             style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
@@ -97,18 +167,11 @@ export default function ApplicationsScreen() {
             accessibilityLabel={`${item.company}, ${item.role}, ${item.currentStatus}`}
             accessibilityRole="button"
           >
-            <View
-              style={[
-                styles.categoryDot,
-                { backgroundColor: item.categoryColour || '#999' },
-              ]}
-            />
+            <View style={[styles.categoryDot, { backgroundColor: item.categoryColour || '#999' }]} />
             <View style={styles.cardContent}>
               <Text style={styles.company}>{item.company}</Text>
               <Text style={styles.role}>{item.role}</Text>
-              <Text style={styles.meta}>
-                {item.categoryName} · {item.currentStatus}
-              </Text>
+              <Text style={styles.meta}>{item.categoryName} · {item.currentStatus}</Text>
               <Text style={styles.meta}>{item.dateApplied}</Text>
               {item.location ? <Text style={styles.meta}>{item.location}</Text> : null}
             </View>
@@ -118,6 +181,7 @@ export default function ApplicationsScreen() {
 
       <AddApplicationButton />
     </View>
+    </SafeAreaView>
   );
 }
 
@@ -126,6 +190,48 @@ const styles = StyleSheet.create({
     flex: 1,
     position: 'relative',
   },
+  searchInput: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#94A3B8',
+    borderRadius: 10,
+    borderWidth: 1,
+    margin: 16,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  filterRow: {
+  paddingHorizontal: 16,
+  paddingVertical: 8,
+  gap: 8,
+  flexDirection: 'row',
+},
+filterButton: {
+  backgroundColor: '#FFFFFF',
+  borderColor: '#94A3B8',
+  borderRadius: 999,
+  borderWidth: 1,
+  paddingHorizontal: 14,
+  paddingVertical: 7,
+  flexShrink: 0,
+  height: 36, // fixed height so things dont expand
+  justifyContent: 'center',      
+  alignItems: 'center',          
+},
+filterButtonSelected: {
+  backgroundColor: '#0F172A',
+  borderColor: '#0F172A',
+},
+filterButtonText: {
+  color: '#0F172A',
+  fontSize: 14,
+  fontWeight: '500',
+  flexShrink: 0,  // fixing the text getting squished
+},
+  filterButtonTextSelected: {
+    color: '#FFFFFF',
+  },
+
   listContent: {
     padding: 16,
     paddingBottom: 100,
@@ -145,14 +251,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#666',
     textAlign: 'center',
+    paddingTop: 8,
+  },
+  emptySubText: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
   },
   addButton: {
-    position: 'absolute',
-    bottom: 24,
-    left: 16,
-    right: 16,
+    marginTop: 16,
     backgroundColor: '#2563EB',
     paddingVertical: 14,
+    paddingHorizontal: 32,
     borderRadius: 10,
     alignItems: 'center',
   },

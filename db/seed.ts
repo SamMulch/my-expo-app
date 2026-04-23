@@ -48,7 +48,7 @@ export async function seedDataIfEmpty() {
       dateApplied: '2026-03-20',
       applicationCount: 2,
       categoryId: gradId,
-      currentStatus: 'Assessment Centre',
+      currentStatus: 'Offer',
       location: 'Dublin',
     },
     {

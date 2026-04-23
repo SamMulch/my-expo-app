@@ -8,6 +8,8 @@ import { applications, targets } from '@/db/schema';
 import WeeklyTargetCard from '../../components/targets/WeeklyTargetCard';
 import StatusPieChart from '../../components/charts/StatusPieChart';
 
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 const STATUS_COLOURS: Record<string, string> = {
   Applied: '#6366F1',
   Interviewing: '#F59E0B',
@@ -78,6 +80,7 @@ export default function HomeScreen() {
   );
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }} edges={['top']}>
     <View style={styles.container}>
       {weeklyTarget && (
         <WeeklyTargetCard
@@ -90,6 +93,7 @@ export default function HomeScreen() {
 
       <StatusPieChart data={pieData} />
     </View>
+    </SafeAreaView>
   );
 }
 

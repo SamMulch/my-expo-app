@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { db } from '../../db/client';
 import { categories } from '../../db/schema';
 import AddCategoryButton from '../../components/applications/AddCategoryButton';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 type Category = {
@@ -53,6 +54,7 @@ export default function CategoriesScreen() {
   }
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }} edges={['top']}>
     <View style={styles.screen}>
       <FlatList
         data={items}
@@ -79,6 +81,7 @@ export default function CategoriesScreen() {
 
       <AddCategoryButton />
     </View>
+    </SafeAreaView>
   );
 }
 
