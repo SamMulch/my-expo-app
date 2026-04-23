@@ -1,10 +1,20 @@
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
+import { sql } from 'drizzle-orm';
 
 import { db } from '@/db/client';
 import { applications, targets } from '@/db/schema';
 import WeeklyTargetCard from '../../components/targets/WeeklyTargetCard';
+import StatusPieChart from '../../components/charts/StatusPieChart';
+
+const STATUS_COLOURS: Record<string, string> = {
+  Applied: '#6366F1',
+  Interviewing: '#F59E0B',
+  Offer: '#10B981',
+  Rejected: '#EF4444',
+  Withdrawn: '#94A3B8',
+};
 
 export default function HomeScreen() {
   const [weeklyTarget, setWeeklyTarget] = useState<{
@@ -14,30 +24,59 @@ export default function HomeScreen() {
   } | null>(null);
 
   const [weeklyCount, setWeeklyCount] = useState(0);
+  const [pieData, setPieData] = useState<
+    { value: number; color: string; label: string }[]
+  >([]);
 
   useFocusEffect(
-  useCallback(() => {
-    async function loadTarget() {
-      const allTargets = await db.select().from(targets);
-      const weekly = allTargets.find((t) => t.timespan === 'weekly');
-      if (!weekly) return;
+    useCallback(() => {
+      async function loadTarget() {
+        const allTargets = await db.select().from(targets);
+        const weekly = allTargets.find((t) => t.timespan === 'weekly');
+        if (!weekly) return;
 
-      setWeeklyTarget({
-        targetCount: weekly.targetCount,
-        startDate: weekly.startDate,
-        endDate: weekly.endDate,
-      });
+        setWeeklyTarget({
+          targetCount: weekly.targetCount,
+          startDate: weekly.startDate,
+          endDate: weekly.endDate,
+        });
 
-      const allApps = await db.select().from(applications);
-      const count = allApps.filter(
-        (a) => a.dateApplied >= weekly.startDate && a.dateApplied <= weekly.endDate
-      ).length;
-      setWeeklyCount(count);
-    }
+        const allApps = await db.select().from(applications);
+        const count = allApps.filter(
+          (a) => a.dateApplied >= weekly.startDate && a.dateApplied <= weekly.endDate
+        ).length;
 
-    loadTarget();
-  }, [])
-);
+        setWeeklyCount(count);
+      }
+
+      loadTarget();
+    }, [])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const load = async () => {
+        const rows = await db
+          .select({
+            status: applications.currentStatus,
+            count: sql<number>`count(*)`.as('count'),
+          })
+          .from(applications)
+          .groupBy(applications.currentStatus);
+
+        setPieData(
+          rows.map((row) => ({
+            value: row.count,
+            color: STATUS_COLOURS[row.status] ?? '#CBD5E1',
+            label: row.status,
+          }))
+        );
+      };
+
+      load();
+    }, [])
+  );
+
   return (
     <View style={styles.container}>
       {weeklyTarget && (
@@ -48,6 +87,8 @@ export default function HomeScreen() {
           endDate={weeklyTarget.endDate}
         />
       )}
+
+      <StatusPieChart data={pieData} />
     </View>
   );
 }

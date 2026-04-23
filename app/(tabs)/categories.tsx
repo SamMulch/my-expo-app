@@ -3,6 +3,8 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { db } from '../../db/client';
 import { categories } from '../../db/schema';
+import AddCategoryButton from '../../components/applications/AddCategoryButton';
+
 
 type Category = {
   id: number;
@@ -75,14 +77,7 @@ export default function CategoriesScreen() {
         )}
       />
 
-      <Pressable
-        style={styles.fab}
-        onPress={() => router.push('/add_category')}
-        accessibilityLabel="Add category"
-        accessibilityRole="button"
-      >
-        <Text style={styles.fabText}>+</Text>
-      </Pressable>
+      <AddCategoryButton />
     </View>
   );
 }

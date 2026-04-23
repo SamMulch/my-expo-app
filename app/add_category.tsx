@@ -11,6 +11,8 @@ import { useRouter } from 'expo-router';
 import { db } from '../db/client';
 import { categories } from '../db/schema';
 
+import AddCategoryButton from '../components/applications/AddCategoryButton';
+
 export default function AddCategoryScreen() {
   const router = useRouter();
 
@@ -51,56 +53,62 @@ export default function AddCategoryScreen() {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>New Category</Text>
+    <>
+      <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+        <Text style={styles.heading}>New Category</Text>
 
-      <Text style={styles.label}>Name *</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g. Tech"
-        value={name}
-        onChangeText={setName}
-        accessibilityLabel="Name"
-      />
+        <Text style={styles.label}>Name *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. Tech"
+          value={name}
+          onChangeText={setName}
+          accessibilityLabel="Name"
+        />
 
-      <Text style={styles.label}>Colour * (hex code)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g. #2563EB"
-        value={colour}
-        onChangeText={setColour}
-        accessibilityLabel="Colour"
-        autoCapitalize="none"
-      />
+        <Text style={styles.label}>Colour * (hex code)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. #2563EB"
+          value={colour}
+          onChangeText={setColour}
+          accessibilityLabel="Colour"
+          autoCapitalize="none"
+        />
 
-      <Text style={styles.label}>Icon * (emoji)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g. 💼"
-        value={icon}
-        onChangeText={setIcon}
-        accessibilityLabel="Icon"
-      />
+        <Text style={styles.label}>Icon * (emoji)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. 💼"
+          value={icon}
+          onChangeText={setIcon}
+          accessibilityLabel="Icon"
+        />
 
-      <Pressable
-        style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-        onPress={handleSave}
-        disabled={saving}
-        accessibilityLabel="Save Category"
-        accessibilityRole="button"
-      >
-        <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Save Category'}</Text>
-      </Pressable>
+        <Pressable
+          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+          onPress={handleSave}
+          disabled={saving}
+          accessibilityLabel="Save Category"
+          accessibilityRole="button"
+        >
+          <Text style={styles.saveButtonText}>
+            {saving ? 'Saving...' : 'Save Category'}
+          </Text>
+        </Pressable>
 
-      <Pressable
-        style={styles.cancelButton}
-        onPress={() => router.back()}
-        accessibilityLabel="Cancel"
-        accessibilityRole="button"
-      >
-        <Text style={styles.cancelButtonText}>Cancel</Text>
-      </Pressable>
-    </ScrollView>
+        <Pressable
+          style={styles.cancelButton}
+          onPress={() => router.back()}
+          accessibilityLabel="Cancel"
+          accessibilityRole="button"
+        >
+          <Text style={styles.cancelButtonText}>Cancel</Text>
+        </Pressable>
+      </ScrollView>
+
+      <AddCategoryButton />
+    </>
   );
 }
 

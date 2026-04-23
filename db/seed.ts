@@ -102,32 +102,8 @@ export async function seedDataIfEmpty() {
     },
     {
       applicationId: insertedApplications[2].id,
-      status: 'Assessment Centre',
+      status: 'Applied',
       changedAt: '2026-04-12',
-    },
-  ]);
-
-  await db.insert(targets).values([
-    {
-      timespan: 'weekly',
-      targetCount: 10,
-      categoryId: null,
-      startDate: '2026-04-01',
-      endDate: '2026-04-07',
-    },
-    {
-      timespan: 'monthly',
-      targetCount: 40,
-      categoryId: techId,
-      startDate: '2026-04-01',
-      endDate: '2026-04-30',
-    },
-    {
-      timespan: 'weekly',
-      targetCount: 5,
-      categoryId: financeId,
-      startDate: '2026-04-01',
-      endDate: '2026-04-07',
     },
   ]);
 
