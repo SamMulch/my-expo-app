@@ -38,8 +38,8 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.title}>Job Tracker</Text>
-        <Text style={styles.subtitle}>Log in to track your applications</Text>
+        <Text style={styles.title}>MyJobs</Text>
+        <Text style={styles.subtitle}>Log in to track your job applications</Text>
 
         <TextInput
           accessibilityLabel="Username"

@@ -108,7 +108,7 @@ export default function ApplicationsScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAFC' }} edges={['top']}>
     <View style={styles.screen}>
       {/* searchbar */}
       <TextInput

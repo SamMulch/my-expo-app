@@ -169,7 +169,6 @@ export default function SettingsScreen() {
           <Text style={styles.dangerButtonText}>Delete Profile</Text>
         </Pressable>
 
-        <Text style={styles.footer}>Job Tracker · IS4447</Text>
       </ScrollView>
     </SafeAreaView>
   );
