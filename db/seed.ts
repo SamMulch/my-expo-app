@@ -131,5 +131,22 @@ export async function seedDataIfEmpty() {
     },
   ]);
 
+  // default weekly target of 10 applications
+  const now = new Date();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - now.getDay()); // finding whenever sunday is 
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);     // this would then be saturday
+
+  await db.insert(targets).values([
+    {
+      timespan: 'weekly',
+      targetCount: 10,
+      categoryId: null,
+      startDate: startOfWeek.toISOString().split('T')[0],
+      endDate: endOfWeek.toISOString().split('T')[0],
+    },
+  ]);
+
   console.log('✅ Seeding complete!');
 }
