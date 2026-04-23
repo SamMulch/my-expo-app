@@ -11,10 +11,10 @@ export async function seedDataIfEmpty() {
   console.log('🌱 Seeding database...');
 
   const insertedCategories = await db.insert(categories).values([
-    { name: 'Tech', colour: '#3B82F6', icon: 'laptop' },
-    { name: 'Finance', colour: '#10B981', icon: 'bank' },
-    { name: 'Marketing', colour: '#F59E0B', icon: 'megaphone' },
-    { name: 'Graduate Roles', colour: '#8B5CF6', icon: 'school' },
+    { name: 'Tech', colour: '#3B82F6', icon: '💻' },
+    { name: 'Finance', colour: '#10B981', icon: '🏦' },
+    { name: 'Marketing', colour: '#F59E0B', icon: '📣' },
+    { name: 'Graduate Roles', colour: '#8B5CF6', icon: '🎓' },
   ]).returning();
 
   const techId = insertedCategories[0].id;
